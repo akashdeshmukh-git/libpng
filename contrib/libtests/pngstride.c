@@ -133,6 +133,11 @@ main(void)
        PNG_FORMAT_LINEAR_Y, WIDTH, 0);
    test_write("write, row stride over 31 bits", 0x80000000U, 1,
        PNG_FORMAT_GRAY, 0, 0);
+   /* The step between rows, in bytes, must fit in a ptrdiff_t: this refuses
+    * the largest row stride of a 16-bit format where ptrdiff_t has 32 bits.
+    */
+   test_write("write, 16-bit row step over ptrdiff_t", 1, 1,
+       PNG_FORMAT_LINEAR_Y, 0x7fffffff, (sizeof (ptrdiff_t)) > 4);
 
    test_read("read, default stride", 0, 1);
    test_read("read, bottom-up", -WIDTH, 1);

@@ -4031,6 +4031,14 @@ png_image_check_row_stride(const png_image *image, png_int_32 *row_stride)
    if (abs_row_stride < min_row_stride)
       return "row stride too small";
 
+   /* The step between rows, in bytes, is a ptrdiff_t.  This only limits the
+    * 16-bit formats on systems where ptrdiff_t has 32 bits.  PNG_SIZE_MAX/2 is
+    * the maximum ptrdiff_t wherever ptrdiff_t and size_t have the same size.
+    */
+   if (abs_row_stride >
+       (PNG_SIZE_MAX/2)/PNG_IMAGE_PIXEL_COMPONENT_SIZE(image->format))
+      return "row stride too large";
+
    /* Limit the whole buffer to 32 bits, for API compatibility with the
     * current, 32-bit, PNG_IMAGE_BUFFER_SIZE macro:
     *
@@ -4048,6 +4056,28 @@ png_image_check_row_stride(const png_image *image, png_int_32 *row_stride)
       return "image too large";
 
    return NULL;
+}
+
+png_alloc_size_t /* PRIVATE */
+png_image_first_row(const png_image *image, png_int_32 row_stride,
+    ptrdiff_t *row_step)
+{
+   /* png_image_check_row_stride has verified that the step fits in ptrdiff_t
+    * and that the whole buffer fits in 32 bits.
+    */
+   ptrdiff_t step = (ptrdiff_t)row_stride *
+       (ptrdiff_t)PNG_IMAGE_PIXEL_COMPONENT_SIZE(image->format);
+
+   *row_step = step;
+
+   /* In a bottom-up layout, with a negative step, the first row of the image
+    * is the last row of the buffer.
+    */
+   if (step < 0 && image->height > 0)
+      return (png_alloc_size_t)(image->height - 1) *
+         ((png_alloc_size_t)0 - (png_alloc_size_t)step);
+
+   return 0;
 }
 
 int /* PRIVATE */

@@ -3168,21 +3168,11 @@ png_image_read_colormapped(void *argument)
     * size libpng requires and call the relevant processing routine safely.
     */
    {
-      void *first_row = display->buffer;
-      ptrdiff_t row_step = display->row_stride;
+      png_byte *first_row = png_voidcast(png_byte *, display->buffer);
 
-      /* The following adjustment is to ensure that calculations are correct,
-       * regardless whether row_step is positive or negative.
-       */
-      if (row_step < 0)
-      {
-         char *ptr = png_voidcast(char*, first_row);
-         ptr += (image->height-1) * (-row_step);
-         first_row = png_voidcast(void *, ptr);
-      }
-
+      first_row += png_image_first_row(image, display->row_stride,
+          &display->row_step);
       display->first_row = first_row;
-      display->row_step = row_step;
    }
 
    if (passes == 0)
@@ -4089,24 +4079,11 @@ png_image_read_direct(void *argument)
     * display acts as a flag.
     */
    {
-      void *first_row = display->buffer;
-      ptrdiff_t row_step = display->row_stride;
+      png_byte *first_row = png_voidcast(png_byte *, display->buffer);
 
-      if (linear != 0)
-         row_step *= 2;
-
-      /* The following adjustment is to ensure that calculations are correct,
-       * regardless whether row_step is positive or negative.
-       */
-      if (row_step < 0)
-      {
-         char *ptr = png_voidcast(char*, first_row);
-         ptr += (image->height - 1) * (-row_step);
-         first_row = png_voidcast(void *, ptr);
-      }
-
+      first_row += png_image_first_row(image, display->row_stride,
+          &display->row_step);
       display->first_row = first_row;
-      display->row_step = row_step;
    }
 
    if (do_local_compose != 0)

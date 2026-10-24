@@ -2149,16 +2149,10 @@ png_image_write_main(void *argument)
 
    {
       const png_byte *row = png_voidcast(const png_byte *, display->buffer);
-      ptrdiff_t row_step = display->row_stride;
 
-      if (linear != 0)
-         row_step *= 2;
-
-      if (row_step < 0)
-         row += (image->height-1) * (-row_step);
-
+      row += png_image_first_row(image, display->row_stride,
+          &display->row_step);
       display->first_row = row;
-      display->row_step = row_step;
    }
 
    /* Apply 'fast' options if the flag is set. */
